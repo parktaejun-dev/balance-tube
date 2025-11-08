@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BalanceTube</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">Your Content Balance</string>
+    <string name="home_period_7days">Last 7 Days</string>
+    <string name="home_period_30days">Last 30 Days</string>
+    <string name="home_sync_button">Sync Watch History</string>
+    <string name="home_recommendations_button">Recommended to Restore Balance</string>
+    <string name="home_lowest_category">You need more: %s</string>
+    <string name="home_loading">Loading your watch history...</string>
+    <string name="home_error">Error: %s</string>
+
+    <!-- Recommendation Screen -->
+    <string name="recommendations_title">Recommendations for %s</string>
+    <string name="recommendations_empty">No recommendations found</string>
+    <string name="recommendations_watch_on_youtube">Watch on YouTube</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_logout">Logout</string>
+    <string name="settings_data">Data Management</string>
+    <string name="settings_delete_all_data">Delete All My Data</string>
+    <string name="settings_delete_confirmation">Are you sure? This will delete all watch history and preferences.</string>
+    <string name="settings_delete_confirm">Delete</string>
+    <string name="settings_delete_cancel">Cancel</string>
+    <string name="settings_data_deleted">All data deleted successfully</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Welcome to BalanceTube</string>
+    <string name="login_subtitle">Analyze your YouTube watch history and discover balanced content recommendations</string>
+    <string name="login_google_button">Sign in with Google</string>
+    <string name="login_error">Login failed: %s</string>
+
+    <!-- Categories -->
+    <string name="category_knowledge">Knowledge</string>
+    <string name="category_entertainment">Entertainment</string>
+    <string name="category_lifestyle">Lifestyle</string>
+    <string name="category_arts_music">Arts &amp; Music</string>
+    <string name="category_self_improvement">Self-Improvement</string>
+    <string name="category_social_creator">Social / Creator</string>
+
+    <!-- Video Item -->
+    <string name="video_duration_format">%d:%02d</string>
+    <string name="video_views_format">%s views</string>
+
+    <!-- Common -->
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="loading">Loading...</string>
+</resources>
