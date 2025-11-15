@@ -58,13 +58,12 @@ router.get('/google/callback', async (req, res) => {
 
     // TODO: Create a session or JWT for the user to keep them logged in.
 
-    // For now, redirect back to the frontend with success status
-    // In a real app, you would also pass the JWT or session cookie
-    res.redirect(`http://localhost:3000?login_success=true`);
+    // Redirect back to the frontend (running on Vite's default port 5173)
+    res.redirect(`http://localhost:5173/dashboard?login_success=true`);
 
   } catch (error) {
     console.error('Error during Google authentication callback:', error.message);
-    res.redirect(`http://localhost:3000?login_success=false`);
+    res.redirect(`http://localhost:5173/?login_success=false`);
   }
 });
 
