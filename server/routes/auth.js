@@ -44,22 +44,23 @@ router.get('/google/callback', async (req, res) => {
     const findUserStmt = db.prepare('SELECT * FROM users WHERE google_id = ?');
     let user = findUserStmt.get(data.id);
 
+    let userId;
     if (user) {
-      // If user exists, update their tokens
+      // If user exists, update their tokens and get their ID
       const updateUserStmt = db.prepare('UPDATE users SET access_token = ?, refresh_token = ? WHERE google_id = ?');
       updateUserStmt.run(tokens.access_token, tokens.refresh_token, data.id);
+      userId = user.id;
       console.log(`User ${data.email} updated.`);
     } else {
-      // If user does not exist, create a new user entry
+      // If user does not exist, create a new user entry and get their ID
       const insertUserStmt = db.prepare('INSERT INTO users (google_id, email, name, picture, access_token, refresh_token) VALUES (?, ?, ?, ?, ?, ?)');
-      insertUserStmt.run(data.id, data.email, data.name, data.picture, tokens.access_token, tokens.refresh_token);
+      const result = insertUserStmt.run(data.id, data.email, data.name, data.picture, tokens.access_token, tokens.refresh_token);
+      userId = result.lastInsertRowid;
       console.log(`User ${data.email} created.`);
     }
 
-    // TODO: Create a session or JWT for the user to keep them logged in.
-
-    // Redirect back to the frontend (running on Vite's default port 5173)
-    res.redirect(`http://localhost:5173/dashboard?login_success=true`);
+    // Redirect back to the frontend with the user's database ID
+    res.redirect(`http://localhost:5173/dashboard?userId=${userId}`);
 
   } catch (error) {
     console.error('Error during Google authentication callback:', error.message);

@@ -1,61 +1,62 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 import RadarChartComponent from '../components/RadarChartComponent';
 import Recommendations from '../components/Recommendations';
 
-// Configure axios to communicate with our backend
 const apiClient = axios.create({
     baseURL: 'http://localhost:3001',
 });
 
 const DashboardPage = () => {
     const navigate = useNavigate();
-    const [user, setUser] = useState({ id: 1 }); // Hardcoded user for MVP
+    const location = useLocation();
+
+    const [user, setUser] = useState(null);
     const [analysisData, setAnalysisData] = useState(null);
     const [recommendations, setRecommendations] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
 
-    const fetchAnalysisData = useCallback(async () => {
-        if (!user) return;
+    const fetchAnalysisData = useCallback(async (userId) => {
+        if (!userId) return;
         try {
-            const response = await apiClient.get(`/api/analysis/result/${user.id}`);
+            const response = await apiClient.get(`/api/analysis/result/${userId}`);
             setAnalysisData(response.data);
         } catch (error) {
             console.error('Error fetching analysis data:', error);
         }
-    }, [user]);
+    }, []);
 
-    const fetchRecommendations = useCallback(async () => {
-        if (!user) return;
+    const fetchRecommendations = useCallback(async (userId) => {
+        if (!userId) return;
         try {
-            const response = await apiClient.get(`/api/recommendations/${user.id}`);
+            const response = await apiClient.get(`/api/recommendations/${userId}`);
             setRecommendations(response.data);
         } catch (error) {
             console.error('Error fetching recommendations:', error);
         }
-    }, [user]);
-
+    }, []);
 
     useEffect(() => {
-        const queryParams = new URLSearchParams(window.location.search);
-        if (queryParams.get('login_success') === 'false') {
-            alert('Login failed. Please try again.');
+        const queryParams = new URLSearchParams(location.search);
+        const userId = queryParams.get('userId');
+
+        if (userId) {
+            setUser({ id: userId });
+            const fetchData = async () => {
+                setIsLoading(true);
+                await fetchAnalysisData(userId);
+                await fetchRecommendations(userId);
+                setIsLoading(false);
+            };
+            fetchData();
+        } else {
+            // If no userId, maybe redirect to login
             navigate('/');
-            return;
         }
-
-        const fetchData = async () => {
-            setIsLoading(true);
-            await fetchAnalysisData();
-            await fetchRecommendations();
-            setIsLoading(false);
-        };
-
-        fetchData();
-    }, [navigate, fetchAnalysisData, fetchRecommendations]);
+    }, [location.search, navigate, fetchAnalysisData, fetchRecommendations]);
 
     const handleSync = async () => {
         if (!user) {
@@ -64,28 +65,34 @@ const DashboardPage = () => {
         }
         setIsSyncing(true);
         try {
-            // In a real app, tokens would be stored securely (e.g., httpOnly cookie)
-            // and sent automatically. Here, we'd need a way to get them after login.
-            // This part of the flow is simplified for the MVP.
-            alert("This flow is simplified for MVP. We'll simulate the process.");
+            // 1. Fetch user's actual YouTube watch history
+            console.log("Step 1: Fetching YouTube history...");
+            const historyResponse = await apiClient.get(`/api/youtube/history/${user.id}`);
 
-            // 1. Simulate fetching youtube history & passing tokens
-            // const historyResponse = await apiClient.post('/api/youtube/history', { tokens: 'DUMMY_TOKENS' });
-
-            // 2. Simulate running the analysis
-            // await apiClient.post('/api/analysis/run', { userId: user.id, videos: historyResponse.data });
-
-            // For now, we'll just re-fetch the data after a delay
-            setTimeout(async () => {
-                await fetchAnalysisData();
-                await fetchRecommendations();
-                alert('Sync and analysis complete!');
+            if (historyResponse.data.length === 0) {
+                alert("Could not find any videos in your watch history.");
                 setIsSyncing(false);
-            }, 2000);
+                return;
+            }
+
+            // 2. Send the history to the backend for analysis
+            console.log("Step 2: Sending videos for analysis...");
+            await apiClient.post('/api/analysis/run', {
+                userId: user.id,
+                videos: historyResponse.data
+            });
+
+            // 3. Re-fetch the analysis data and recommendations to update the UI
+            console.log("Step 3: Fetching updated analysis and recommendations...");
+            await fetchAnalysisData(user.id);
+            await fetchRecommendations(user.id);
+
+            alert('Sync and analysis complete! Your dashboard is updated.');
 
         } catch (error) {
             console.error('Error syncing history:', error);
-            alert('Failed to sync history.');
+            alert(`Failed to sync history: ${error.message}`);
+        } finally {
             setIsSyncing(false);
         }
     };
