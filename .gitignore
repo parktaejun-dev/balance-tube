@@ -86,3 +86,4 @@ lint/tmp/
 
 # Android Profiling
 *.hprof
+\n# Dependency directories\n/server/node_modules\n/client/node_modules
