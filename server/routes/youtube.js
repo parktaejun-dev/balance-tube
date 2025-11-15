@@ -36,17 +36,32 @@ router.get('/history/:userId', async (req, res) => {
             auth: oauth2Client,
         });
 
-        // The YouTube Data API provides access to the "Watch History" playlist with the special ID 'HL'.
+        console.log("--- DEBUG: Attempting to fetch watch history (playlistId: 'HL') ---");
         const playlistResponse = await youtube.playlistItems.list({
-            playlistId: 'HL', // 'HL' is the fixed ID for the "Watch History" playlist.
+            playlistId: 'HL',
             part: 'snippet,contentDetails',
-            maxResults: 50 // Fetch the 50 most recent videos. This can be adjusted.
+            maxResults: 50
         });
+
+        // --- Start of new debug logging ---
+        console.log("--- DEBUG: Full response from YouTube API ---");
+        console.log(JSON.stringify(playlistResponse, null, 2));
+        console.log("---------------------------------------------");
+        // --- End of new debug logging ---
 
         res.status(200).json(playlistResponse.data.items);
 
     } catch (error) {
-        console.error('Error fetching YouTube watch history:', error.message);
+        // --- Enhanced error logging ---
+        console.error("--- DEBUG: An error occurred while fetching history ---");
+        console.error("Error Message:", error.message);
+        if (error.response) {
+            console.error("Error Status:", error.response.status);
+            console.error("Error Data:", JSON.stringify(error.response.data, null, 2));
+        }
+        console.error("----------------------------------------------------");
+        // --- End of enhanced error logging ---
+
         if (error.message.includes('User not found')) {
             return res.status(404).send('User not found.');
         }
