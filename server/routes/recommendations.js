@@ -27,8 +27,12 @@ router.get('/:userId', async (req, res) => {
         `);
         const result = stmt.get(userId);
 
+        // If no data is found, return an empty but valid response
         if (!result) {
-            return res.status(404).json({ message: "No analysis data found for this user. Cannot generate recommendations." });
+            return res.status(200).json({
+                leastWatchedCategory: 'N/A',
+                recommendations: [],
+            });
         }
 
         const leastWatchedCategory = result.category;

@@ -15,12 +15,27 @@ const getAuthenticatedClient = (userId) => {
         process.env.GOOGLE_CLIENT_SECRET,
         process.env.OAUTH2_REDIRECT_URI
     );
+
     oauth2Client.setCredentials({
         access_token: user.access_token,
-        refresh_token: user.refresh_token
+        refresh_token: user.refresh_token,
     });
+
+    // Listen for token refresh events.
+    // The googleapis library automatically uses the refresh token to get a new
+    // access token when it's expired. This event allows us to capture that new token.
+    oauth2Client.on('tokens', (tokens) => {
+        if (tokens.access_token) {
+            console.log('--- DEBUG: Access token was refreshed. Updating database. ---');
+            const updateTokenStmt = db.prepare(
+                'UPDATE users SET access_token = ? WHERE id = ?'
+            );
+            updateTokenStmt.run(tokens.access_token, userId);
+        }
+    });
+
     return oauth2Client;
-}
+};
 
 // Route to get the user's actual YouTube watch history
 router.get('/history/:userId', async (req, res) => {
@@ -36,11 +51,31 @@ router.get('/history/:userId', async (req, res) => {
             auth: oauth2Client,
         });
 
-        console.log("--- DEBUG: Attempting to fetch watch history (playlistId: 'HL') ---");
+        console.log("--- DEBUG: Fetching channel details to find watch history playlist ---");
+        const channelResponse = await youtube.channels.list({
+            part: 'contentDetails',
+            mine: true,
+        });
+
+        const relatedPlaylists = channelResponse.data.items[0]?.contentDetails?.relatedPlaylists;
+        if (!relatedPlaylists) {
+            console.error("--- DEBUG: Could not find relatedPlaylists for the user's channel. ---");
+            return res.status(404).send('Could not find channel details for the user.');
+        }
+
+        // The watch history playlist is special and often referred to by the alias 'HL'.
+        // We log the returned playlists for debugging but will use 'HL' as it's the standard.
+        console.log("--- DEBUG: Full relatedPlaylists object ---");
+        console.log(JSON.stringify(relatedPlaylists, null, 2));
+        console.log("-----------------------------------------");
+
+        const historyPlaylistId = 'HL'; // 'HL' is the de-facto standard ID for watch history.
+
+        console.log(`--- DEBUG: Attempting to fetch watch history with playlistId: '${historyPlaylistId}' ---`);
         const playlistResponse = await youtube.playlistItems.list({
-            playlistId: 'HL',
+            playlistId: historyPlaylistId,
             part: 'snippet,contentDetails',
-            maxResults: 50
+            maxResults: 50,
         });
 
         // --- Start of new debug logging ---
