@@ -76,14 +76,14 @@ const DashboardPage = () => {
             }
 
             // 2. Send the history to the backend for analysis
-            console.log("Step 2: Sending videos for analysis...");
+            console.log("Step 3: Sending videos for analysis...");
             await apiClient.post('/api/analysis/run', {
                 userId: user.id,
                 videos: historyResponse.data
             });
 
             // 3. Re-fetch the analysis data and recommendations to update the UI
-            console.log("Step 3: Fetching updated analysis and recommendations...");
+            console.log("Step 4: Fetching updated analysis and recommendations...");
             await fetchAnalysisData(user.id);
             await fetchRecommendations(user.id);
 
